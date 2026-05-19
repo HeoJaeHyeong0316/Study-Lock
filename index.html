@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FocusLock - 몰입형 공부 타이머 및 잠금</title>
+    
+    <!-- Meta tags for SEO & PWA Web Capabilities -->
+    <meta name="description" content="포커스락으로 공부에 방해되는 요소를 차단하고, 과학적인 타이머와 잠금 모드를 통해 완벽하게 몰입해 보세요. 실시간 학습 통계 및 백색소음도 자체 지원합니다.">
+    <meta name="theme-color" content="#06040a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Core Application Logic -->
+    <script src="app.js" defer></script>
+</head>
+<body>
+
+    <!-- Main Container Framing (Centered Phone Viewport on Desktop) -->
+    <main class="app-frame" id="appFrame">
+
+        <!-- ==========================================
+             1. SPLASH SCREEN (Initial Loader)
+             ========================================== -->
+        <section id="splash" class="screen active">
+            <div class="splash-content">
+                <div class="logo-glow">
+                    <!-- Timer / Lock Silhouette Logo -->
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M12 20C7.6 20 4 16.4 4 12S7.6 4 12 4 20 7.6 20 12 16.4 20 12 20M12.5 7H11V13L16.2 16.2L17 15L12.5 12.3V7Z"/>
+                    </svg>
+                </div>
+                <h1 class="splash-title">FocusLock</h1>
+                <p class="splash-subtitle">모든 방해를 지우고, 몰입의 순간으로</p>
+                <div class="splash-loader" id="splashLoader"></div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             2. AUTHENTICATION SCREEN (Login & Register)
+             ========================================== -->
+        <section id="login" class="screen">
+            <div class="auth-header">
+                <h2 class="auth-title" id="authTitle">로그인</h2>
+                <p class="auth-subtitle" id="authSubtitle">포커스락과 함께 공부 루틴을 만들어보세요.</p>
+            </div>
+            
+            <div class="auth-card">
+                <form id="authForm" onsubmit="return false;">
+                    <div class="form-group" id="nickGroup" style="display: none;">
+                        <label class="form-label" for="authNick">닉네임</label>
+                        <input type="text" id="authNick" class="input-glow" placeholder="공부용 별명 입력">
+                        <span class="error-text" id="nickError">닉네임을 입력해 주세요.</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="authEmail">이메일 주소</label>
+                        <input type="email" id="authEmail" class="input-glow" placeholder="example@email.com" required>
+                        <span class="error-text" id="emailError">올바른 이메일 형식이 아닙니다.</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="authPass">비밀번호</label>
+                        <input type="password" id="authPass" class="input-glow" placeholder="비밀번호 8자 이상 입력" required>
+                        <span class="error-text" id="passError">비밀번호 조합 오류</span>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="btnAuthSubmit">로그인</button>
+                </form>
+                
+                <p class="auth-switch" id="authSwitchText">
+                    아직 회원이 아니신가요? <a href="#" id="linkSwitchMode">회원가입</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             3. HOME SCREEN (Dashboard & Quick Launch)
+             ========================================== -->
+        <section id="home" class="screen">
+            <div class="home-header">
+                <div class="welcome-box">
+                    <h3>반가워요 👋</h3>
+                    <h2 id="homeNickName">홍길동 님</h2>
+                </div>
+                <div class="streak-badge" title="연속 집중 성공 일수">
+                    <!-- Flame icon -->
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17.55 11.2C17.55 9.17 15.9 7.6 13.9 7.6C11.9 7.6 10.25 9.17 10.25 11.2C10.25 12.13 10.6 12.97 11.17 13.62C10.12 13.95 9.3 14.88 9.3 16C9.3 17.5 10.5 18.7 12 18.7C13.5 18.7 14.7 17.5 14.7 16C14.7 14.88 13.88 13.95 12.83 13.62C13.4 12.97 13.75 12.13 13.75 11.2M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M16.6 16.3C15.65 17.8 13.95 18.8 12 18.8C10.05 18.8 8.35 17.8 7.4 16.3C7.15 15.9 7.03 15.46 7.03 15C7.03 13.6 7.8 12.38 9 11.75V10.5C9 8 10.8 6 13 6S17 8 17 10.5V11.75C18.2 12.38 18.97 13.6 18.97 15C18.97 15.46 18.85 15.9 18.6 16.3Z"/>
+                    </svg>
+                    <span id="homeStreakCount">5</span>일 연속
+                </div>
+            </div>
+
+            <!-- Daily Target Progress Metric -->
+            <div class="home-focus-summary">
+                <div class="progress-header">
+                    <span>오늘의 목표 달성</span>
+                    <span id="progressPercentage">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFillBar"></div>
+                </div>
+                <div class="progress-header" style="margin-top: 10px; margin-bottom: 0; font-size: 0.78rem;">
+                    <span id="homeActualFocusText">현재 0분</span>
+                    <span id="homeTargetFocusText">목표 120분</span>
+                </div>
+            </div>
+
+            <!-- Large Pulsative Study Trigger -->
+            <div class="center-pulse-container">
+                <button class="pulse-study-btn" id="btnLaunchStudy">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M10,8.5V15.5L15.5,12L10,8.5Z"/>
+                    </svg>
+                    <span>공부 시작</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             4. STUDY SETTINGS SCREEN (Configuration)
+             ========================================== -->
+        <section id="settings" class="screen">
+            <div class="settings-header">
+                <h2>공부 준비</h2>
+            </div>
+            
+            <div class="settings-scroll" style="display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px;">
+                <!-- 과목 선택 Card -->
+                <div class="setting-card">
+                    <span class="form-label">집중할 과목</span>
+                    <div class="subject-grid" id="subjectGrid">
+                        <!-- Dynamically filled with JS -->
+                    </div>
+                </div>
+
+                <!-- 목표 시간 설정 Card -->
+                <div class="setting-card">
+                    <span class="form-label">목표 집중 시간</span>
+                    <div class="preset-container" id="presetTimeContainer">
+                        <button type="button" class="preset-btn" data-time="25">25분</button>
+                        <button type="button" class="preset-btn active" data-time="50">50분</button>
+                        <button type="button" class="preset-btn" data-time="90">90분</button>
+                    </div>
+                    <div class="custom-time-picker">
+                        <span>직접 지정 (분 단위)</span>
+                        <input type="number" id="inputCustomTime" min="5" max="180" value="50">
+                    </div>
+                </div>
+
+                <!-- BGM 및 백색소음 합성 설정 Card -->
+                <div class="setting-card">
+                    <span class="form-label">몰입 백색소음 (자체 합성)</span>
+                    <div class="bgm-grid" id="bgmGrid">
+                        <button type="button" class="bgm-btn active" data-sound="none">소음 없음</button>
+                        <button type="button" class="bgm-btn" data-sound="rain">자연 빗소리</button>
+                        <button type="button" class="bgm-btn" data-sound="white">딥 백색소음</button>
+                        <button type="button" class="bgm-btn" data-sound="cafe">카페 소음</button>
+                    </div>
+                </div>
+
+                <!-- 잠금 강도 및 권한 설정 Card -->
+                <div class="setting-card">
+                    <div class="lock-toggle-box">
+                        <div>
+                            <h4>웹 이탈 차단 (잠금 모드)</h4>
+                            <p>공부 중 창 이탈 시 패널티 및 경보 작동</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="lockModeToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn-primary" id="btnStartStudySession" style="margin-top: 10px;">
+                    몰입 타이머 작동 시작
+                </button>
+                <button type="button" class="btn-secondary" id="btnCancelSettings">
+                    취소하고 돌아가기
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             5. TIMER & HARDCORE LOCK SCREEN
+             ========================================== -->
+        <section id="timer" class="screen">
+            <span class="timer-sub-title" id="timerSubjectTag">과목: 수학</span>
+            
+            <!-- Circular Progress Countdown SVG Ring -->
+            <div class="circular-timer-box">
+                <svg class="timer-circle-svg" viewBox="0 0 240 240">
+                    <circle class="timer-track-circle" cx="120" cy="120" r="110"/>
+                    <circle class="timer-fill-circle" id="timerFillCircle" cx="120" cy="120" r="110"/>
+                </svg>
+                <!-- Dynamic text overlay -->
+                <div class="timer-digits" id="timerDisplayDigits">50:00</div>
+            </div>
+            
+            <div class="timer-footer">
+                <button type="button" class="btn-secondary" id="btnPauseTimer">일시정지</button>
+                <button type="button" class="btn-danger" id="btnTriggerGiveUp">포기하기</button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             6. STUDY COMPLETION SCREEN (Success)
+             ========================================== -->
+        <section id="completion" class="screen">
+            <canvas class="completion-canvas" id="confettiCanvas"></canvas>
+            
+            <div class="completion-wrap">
+                <div class="completion-icon-box">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 2H6C4.9 2 4 2.9 4 4V7C4 9.8 6.2 12 9 12.1V17H7C5.9 17 5 17.9 5 19V21H19V19C19 17.9 18.1 17 17 17H15V12.1C17.8 12 20 9.8 20 7V4C20 2.9 19.1 2 18 2M6 7V4H9V10.1C7.3 9.7 6 8.5 6 7M18 7C18 8.5 16.7 9.7 15 10.1V4H18V7Z"/>
+                    </svg>
+                </div>
+                
+                <h2 class="complete-title">오늘의 집중 몰입<br>성공했습니다!</h2>
+                <div class="complete-duration" id="completeFocusTimeText">50분 집중 완료</div>
+                
+                <!-- Accomplishment statistics row -->
+                <div class="complete-stats-row">
+                    <div class="stat-item-inner">
+                        <h4>연속 달성일</h4>
+                        <p id="completeStreakText">6일째</p>
+                    </div>
+                    <div class="stat-item-inner">
+                        <h4>누적 포인트</h4>
+                        <p id="completePointText">+150 XP</p>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn-primary" id="btnTriggerInstagramShare" style="margin-bottom: 12px;">
+                    인스타그램 스토리에 공유하기
+                </button>
+                <button type="button" class="btn-secondary" id="btnGoToHomeFromCompletion" style="width: 100%;">
+                    홈 대시보드로 가기
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             7. STATISTICS SCREEN (SVG Visual Analytics)
+             ========================================== -->
+        <section id="stats" class="screen">
+            <div class="settings-header">
+                <h2>몰입 통계</h2>
+            </div>
+            
+            <div class="stats-scroll" style="padding-bottom: 80px;">
+                <!-- 주간 집중 시간 막대 그래프 Card -->
+                <div class="chart-card">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><path d="M22,21H2V3H4V19H22V21M20,6H17V17H20V6M15,11H12V17H15V11M10,9H7V17H10V9Z"/></svg>
+                        주간 몰입 분석 (시간/분)
+                    </h3>
+                    <div class="svg-chart-container" id="barChartContainer">
+                        <!-- Custom SVG dynamically drawn by JS -->
+                    </div>
+                </div>
+
+                <!-- 과목 비율 도넛 그래프 Card -->
+                <div class="chart-card">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12H16A4,4 0 0,0 12,8V4M12,16A4,4 0 1,1 16,12H20A8,8 0 0,1 12,20V16Z"/></svg>
+                        학습 과목 비율
+                    </h3>
+                    <div class="svg-chart-container" id="donutChartContainer">
+                        <!-- Custom SVG dynamically drawn by JS -->
+                    </div>
+                </div>
+
+                <!-- 누적 집중 분석 그리드 -->
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <h4>총 집중 시간</h4>
+                        <p id="statsTotalFocus">1,240분</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4>평균 집중 수행</h4>
+                        <p id="statsAvgSession">48분</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4>최애 공부 과목</h4>
+                        <p id="statsBestSubject">수학</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4>최대 연속 달성</h4>
+                        <p id="statsMaxStreak">12일</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             8. MY PAGE SCREEN (Configuration & Personal)
+             ========================================== -->
+        <section id="mypage" class="screen">
+            <div class="profile-card">
+                <div class="profile-avatar" id="avatarLetter">H</div>
+                <div class="profile-details">
+                    <h3 id="myPageNick">홍길동 님</h3>
+                    <p id="myPageEmail">example@email.com</p>
+                </div>
+            </div>
+
+            <div class="stats-scroll" style="padding-bottom: 80px;">
+                <!-- 일일 목표 설정 Card -->
+                <div class="setting-card">
+                    <div class="range-slider-group">
+                        <div class="range-label-row">
+                            <span>하루 목표 집중 시간</span>
+                            <span id="sliderValueText" style="color: var(--accent-cyan); font-weight: 700;">120분</span>
+                        </div>
+                        <input type="range" id="dailyGoalSlider" class="slider-glow" min="30" max="360" step="10" value="120">
+                    </div>
+                </div>
+
+                <!-- 메뉴 리스트 글래스 카드 -->
+                <div class="menu-list">
+                    <div class="menu-item" id="menuAlarmToggle">
+                        <span>집중 시간 시작 푸시 알림</span>
+                        <span class="chevron" id="alarmStateText">켜짐</span>
+                    </div>
+                    <div class="menu-item" id="menuCheckPermissions">
+                        <span>잠금 백그라운드 권한 진단</span>
+                        <span class="chevron">안전함</span>
+                    </div>
+                    <div class="menu-item danger-action" id="menuClearData">
+                        <span>모든 몰입 기록 초기화하기</span>
+                        <span class="chevron">초기화</span>
+                    </div>
+                    <div class="menu-item danger-action" id="menuLogout">
+                        <span>포커스락 로그아웃</span>
+                        <span class="chevron">나가기</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             9. BOTTOM NAVIGATION TAB BAR
+             ========================================== -->
+        <nav class="bottom-nav" id="bottomNavBar" style="display: none;">
+            <div class="nav-item active" data-screen="home">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span>홈 대시보드</span>
+            </div>
+            <div class="nav-item" data-screen="stats">
+                <svg viewBox="0 0 24 24">
+                    <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                </svg>
+                <span>통계 분석</span>
+            </div>
+            <div class="nav-item" data-screen="mypage">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                <span>마이페이지</span>
+            </div>
+        </nav>
+
+        <!-- ==========================================
+             10. DIALOGS, MODALS, OVERLAYS
+             ========================================== -->
+        
+        <!-- 10.1. ESCAPE/BLUR INTENT PENALTY SYSTEM (Lock Mode Trigger) -->
+        <div class="penalty-overlay" id="penaltyOverlay">
+            <div class="penalty-glow-card">
+                <svg class="warning-icon-animate" viewBox="0 0 24 24">
+                    <path d="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z"/>
+                </svg>
+                <h2>경고: 몰입 이탈 감지!</h2>
+                <p>
+                    잠금(이탈 방지) 모드가 작동 중입니다.<br>
+                    다른 창으로 이동하면 현재까지의 집중 기록이 무효화되며, <strong>연속 공부 성공일이 리셋</strong>됩니다.
+                </p>
+                <button type="button" class="btn-primary" id="btnAcknowledgePenalty" style="background: var(--accent-magenta); box-shadow: 0 4px 15px rgba(244,63,94,0.4);">
+                    몰입으로 즉시 복귀하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 10.2. LONG PRESS TO CONFIRM GIVING UP MODAL -->
+        <div class="giveup-modal" id="giveUpConfirmationModal">
+            <div class="giveup-card">
+                <svg viewBox="0 0 24 24" style="width:40px; height:40px; fill:var(--accent-magenta); margin-bottom:12px;">
+                    <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                </svg>
+                <h3>학습을 포기하시겠습니까?</h3>
+                <p>지금 포기하시면 오늘의 누적 집중 기록에서 제외되며, <strong>연속 공부 성공(Streak)이 초기화</strong>됩니다.</p>
+                
+                <!-- Long press loading button -->
+                <div class="hold-btn-container">
+                    <div class="btn-hold-fill" id="btnHoldProgressFill"></div>
+                    <div class="btn-hold" id="btnHoldGiveUpTrigger">여기를 길게 눌러 포기 완료 (3초)</div>
+                </div>
+                
+                <button type="button" class="btn-secondary" id="btnCancelGiveUp" style="width:100%;">
+                    아니요, 계속 공부하겠습니다
+                </button>
+            </div>
+        </div>
+
+        <!-- 10.3. INSTAGRAM STORY SHARE GENERATOR CARD -->
+        <div class="share-modal" id="shareModal">
+            <div class="share-card-container" id="shareCardImage">
+                <div class="share-brand">FocusLock</div>
+                <div class="share-main-time" id="shareFocusTime">50:00</div>
+                <div class="share-subject" id="shareSubjectName">과목: 수학</div>
+                <div class="share-badges">
+                    <div class="share-pill">성공 🔥</div>
+                    <div class="share-pill orange" id="shareStreakDay">6일 연속 집중</div>
+                </div>
+                <div class="share-footer-text">방해 없는 완전한 몰입의 순간</div>
+            </div>
+            
+            <div class="share-controls">
+                <button type="button" class="btn-share-action cancel" id="btnDismissShare">닫기</button>
+                <button type="button" class="btn-share-action insta" id="btnTriggerMockShare">스토리 전송</button>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
