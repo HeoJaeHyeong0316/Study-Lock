@@ -9,6 +9,7 @@ import org.example.study_lock.Repository.UserRepository;
 import org.example.study_lock.dto.StudyEndRequest;
 import org.example.study_lock.dto.StudyStartRequest;
 import org.example.study_lock.dto.StudyStartResponse;
+import org.example.study_lock.Service.FcmService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -63,7 +64,6 @@ public class StudyService {
                 session.getStartedAt(),
                 LocalDateTime.now()
         );
-
         // 목표 달성 여부
         boolean isSuccess = actualTime >= session.getGoalTime();
 
@@ -73,6 +73,15 @@ public class StudyService {
         session.setEndedAt(LocalDateTime.now());
 
         studySessionRepository.save(session);
+        // 목표 달성 시 알림
+        if (isSuccess && user.getFcmToken() != null) {
+            FcmService.sendNotification(
+                    user.getFcmToken(),
+                    "🎉 목표 달성!",
+                    session.getSubject() + " 공부 목표를 달성했어요!"
+            );
+        }
+
     }
 
     // 이탈 감지
@@ -89,4 +98,5 @@ public class StudyService {
 
         return session.getEscapeCount();
     }
+
 }

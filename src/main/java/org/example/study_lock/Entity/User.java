@@ -33,6 +33,9 @@ public class User {
     @Column(name = "refresh_token")
     private String refreshToken;
 
+    @Column(name = "fcm_token")
+    private  String fcmToken;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

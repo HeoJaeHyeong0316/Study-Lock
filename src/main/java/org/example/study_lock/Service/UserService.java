@@ -41,4 +41,10 @@ public class UserService {
         studySessionRepository.deleteByUser(user);
         userRepository.delete(user);
     }
+    public void saveFcmToken(String token, String fcmToken) {
+        String email = jwtUtil.getEmailFromToken(token);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+    }
 }
