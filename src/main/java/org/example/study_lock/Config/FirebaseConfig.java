@@ -15,7 +15,7 @@ public class FirebaseConfig {
         try {
             InputStream serviceAccount =
                     getClass().getClassLoader()
-                            .getResourceAsStream("study-lock-d34be-firebase-adminsdk-fbsvc-26b40f0970.json");
+                            .getResourceAsStream("FIREBASE_CREDENTIALS");
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
