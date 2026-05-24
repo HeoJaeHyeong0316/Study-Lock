@@ -30,9 +30,15 @@ public class StudyService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
 
-        // 이미 진행 중인 세션 있는지 확인
+        // 이미 진행 중인 세션이 있으면 자동 종료 처리 (앱 강제 종료/네트워크 실패/뒤로가기 등 대비)
         studySessionRepository.findByUserAndEndedAtIsNull(user)
-                .ifPresent(s -> { throw new RuntimeException("이미 진행 중인 세션이 있습니다"); });
+                .ifPresent(s -> {
+                    long actualTime = ChronoUnit.SECONDS.between(s.getStartedAt(), LocalDateTime.now());
+                    s.setActualTime((int) actualTime);
+                    s.setEndedAt(LocalDateTime.now());
+                    s.setSuccess(actualTime >= s.getGoalTime());
+                    studySessionRepository.save(s);
+                });
 
         // 세션 생성
         StudySession session = new StudySession();
