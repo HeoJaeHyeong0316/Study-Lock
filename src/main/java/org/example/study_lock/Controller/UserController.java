@@ -31,11 +31,11 @@ public class UserController {
         return ResponseEntity.ok("회원 탈퇴 성공");
     }
     // Fcm 토큰 저장
-    @PostMapping
+    @PostMapping("/fcm-token")
     public ResponseEntity<String> saveFcmToken(
             @RequestHeader("Authorization") String token,
             @RequestBody FcmTokenRequest request){
-        String accessToken = token.replace("Bearer","");
+        String accessToken = token.replace("Bearer ", "");
         userService.saveFcmToken(accessToken, request.getFcmToken());
         return ResponseEntity.ok("FCM 토큰 저장 성공");
     }

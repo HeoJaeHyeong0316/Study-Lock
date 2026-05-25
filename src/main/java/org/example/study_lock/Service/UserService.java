@@ -9,6 +9,8 @@ import org.example.study_lock.dto.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -23,10 +25,21 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
 
+        // 마지막 달성일이 어제보다 이전이면 연속 끊긴 상태 → 0으로 표시
+        int effectiveStreak = user.getCurrentStreak();
+        LocalDate last = user.getLastSuccessDate();
+        LocalDate today = LocalDate.now();
+        if (last == null || last.isBefore(today.minusDays(1))) {
+            effectiveStreak = 0;
+        }
+
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
-                user.getNickname()
+                user.getNickname(),
+                effectiveStreak,
+                user.getLongestStreak(),
+                user.getLastSuccessDate()
         );
     }
 
