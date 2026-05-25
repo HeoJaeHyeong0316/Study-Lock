@@ -37,10 +37,10 @@ public class User {
     @Column(name = "fcm_token")
     private  String fcmToken;
 
-    @Column(name = "current_streak", nullable = false)
+    @Column(name = "current_streak", nullable = false, columnDefinition = "INTEGER NOT NULL DEFAULT 0")
     private int currentStreak = 0;
 
-    @Column(name = "longest_streak", nullable = false)
+    @Column(name = "longest_streak", nullable = false, columnDefinition = "INTEGER NOT NULL DEFAULT 0")
     private int longestStreak = 0;
 
     @Column(name = "last_success_date")
