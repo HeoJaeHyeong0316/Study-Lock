@@ -1,0 +1,19 @@
+### .env ###
+.env
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+### Gradle ###
+.gradle/
+build/
+
+### VS Code ###
+.vscode/
+
+### Firebase ###
+src/main/resources/firebase-adminsdk.json
