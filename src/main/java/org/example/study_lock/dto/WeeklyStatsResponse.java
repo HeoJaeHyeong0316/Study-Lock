@@ -1,5 +1,6 @@
 package org.example.study_lock.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,6 +18,7 @@ public class WeeklyStatsResponse {
     public static class DailyStats {
         private String day;       // 요일 (월,화,수,목,금,토,일)
         private int totalTime;    // 해당 요일 공부 시간 (초)
+        @JsonProperty("isToday")
         private boolean isToday;  // 오늘 여부
     }
 }

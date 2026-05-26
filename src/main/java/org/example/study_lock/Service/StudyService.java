@@ -9,8 +9,10 @@ import org.example.study_lock.Repository.UserRepository;
 import org.example.study_lock.dto.StudyEndRequest;
 import org.example.study_lock.dto.StudyStartRequest;
 import org.example.study_lock.dto.StudyStartResponse;
+import org.example.study_lock.Service.FcmService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -29,9 +31,15 @@ public class StudyService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
 
-        // 이미 진행 중인 세션 있는지 확인
+        // 이미 진행 중인 세션이 있으면 자동 종료 처리 (앱 강제 종료/네트워크 실패/뒤로가기 등 대비)
         studySessionRepository.findByUserAndEndedAtIsNull(user)
-                .ifPresent(s -> { throw new RuntimeException("이미 진행 중인 세션이 있습니다"); });
+                .ifPresent(s -> {
+                    long actualTime = ChronoUnit.SECONDS.between(s.getStartedAt(), LocalDateTime.now());
+                    s.setActualTime((int) actualTime);
+                    s.setEndedAt(LocalDateTime.now());
+                    s.setSuccess(actualTime >= s.getGoalTime());
+                    studySessionRepository.save(s);
+                });
 
         // 세션 생성
         StudySession session = new StudySession();
@@ -63,7 +71,6 @@ public class StudyService {
                 session.getStartedAt(),
                 LocalDateTime.now()
         );
-
         // 목표 달성 여부
         boolean isSuccess = actualTime >= session.getGoalTime();
 
@@ -73,6 +80,43 @@ public class StudyService {
         session.setEndedAt(LocalDateTime.now());
 
         studySessionRepository.save(session);
+
+        // 목표 달성 시 streak 갱신 + 알림
+        if (isSuccess) {
+            updateStreak(user);
+            userRepository.save(user);
+
+            if (user.getFcmToken() != null) {
+                FcmService.sendNotification(
+                        user.getFcmToken(),
+                        "🎉 목표 달성!",
+                        session.getSubject() + " 공부 목표를 달성했어요! (" + user.getCurrentStreak() + "일 연속)"
+                );
+            }
+        }
+    }
+
+    // 연속 달성일 갱신
+    private void updateStreak(User user) {
+        LocalDate today = LocalDate.now();
+        LocalDate last = user.getLastSuccessDate();
+
+        if (last != null && last.isEqual(today)) {
+            // 오늘 이미 달성 처리됨 - 변경 없음
+            return;
+        }
+
+        if (last != null && last.plusDays(1).isEqual(today)) {
+            user.setCurrentStreak(user.getCurrentStreak() + 1);
+        } else {
+            user.setCurrentStreak(1);
+        }
+
+        if (user.getCurrentStreak() > user.getLongestStreak()) {
+            user.setLongestStreak(user.getCurrentStreak());
+        }
+
+        user.setLastSuccessDate(today);
     }
 
     // 이탈 감지
@@ -89,4 +133,5 @@ public class StudyService {
 
         return session.getEscapeCount();
     }
+
 }

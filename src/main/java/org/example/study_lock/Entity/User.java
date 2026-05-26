@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,6 +33,18 @@ public class User {
 
     @Column(name = "refresh_token")
     private String refreshToken;
+
+    @Column(name = "fcm_token")
+    private  String fcmToken;
+
+    @Column(name = "current_streak", nullable = false, columnDefinition = "INTEGER NOT NULL DEFAULT 0")
+    private int currentStreak = 0;
+
+    @Column(name = "longest_streak", nullable = false, columnDefinition = "INTEGER NOT NULL DEFAULT 0")
+    private int longestStreak = 0;
+
+    @Column(name = "last_success_date")
+    private LocalDate lastSuccessDate;
 
     @PrePersist
     public void prePersist() {
