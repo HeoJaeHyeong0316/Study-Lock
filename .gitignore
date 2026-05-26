@@ -1,0 +1,16 @@
+### .env ###
+.env
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+### Gradle ###
+.gradle/
+build/
+
+### VS Code ###
+.vscode/
